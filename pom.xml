@@ -9,9 +9,9 @@
     <version>2.0.0</version>
     <packaging>jar</packaging>
 
-    <name>MysticCraft</name>
+    <name>Vestige</name>
     <description>A public Java SDK for Minecraft modding and server tools</description>
-    <url>https://github.com/s0i4xxz/java-lib</url>
+    <url>https://github.com/vestige-living-world/javalib</url>
 
     <licenses>
         <license>
@@ -29,9 +29,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/s0i4xxz/java-lib.git</connection>
-        <developerConnection>scm:git:ssh://github.com:s0i4xxz/java-lib.git</developerConnection>
-        <url>https://github.com/s0i4xxz/java-lib</url>
+        <connection>scm:git:git://github.com/vestige-living-world/javalib.git</connection>
+        <developerConnection>scm:git:ssh://github.com:vestige-living-world/javalib.git</developerConnection>
+        <url>https://github.com/vestige-living-world/javalib</url>
     </scm>
 
     <properties>

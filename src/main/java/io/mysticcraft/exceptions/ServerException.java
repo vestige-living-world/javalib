@@ -1,15 +1,7 @@
 package io.mysticcraft.exceptions;
 
-/**
- * Thrown when the server returns a 5xx server error.
- */
+/** @deprecated Use {@link io.vestige.exceptions.ServerException} */
+@Deprecated
 public class ServerException extends MysticCraftException {
-
-    public ServerException(String message, int statusCode, String errorType) {
-        super(message, statusCode, errorType);
-    }
-
-    public ServerException(String message, int statusCode, String errorType, Throwable cause) {
-        super(message, statusCode, errorType, cause);
-    }
+    public ServerException(String message) { super(message); }
 }

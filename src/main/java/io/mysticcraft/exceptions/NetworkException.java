@@ -1,15 +1,8 @@
 package io.mysticcraft.exceptions;
 
-/**
- * Thrown when a network-level failure occurs (timeout, connection refused, etc.).
- */
+/** @deprecated Use {@link io.vestige.exceptions.NetworkException} */
+@Deprecated
 public class NetworkException extends MysticCraftException {
-
-    public NetworkException(String message) {
-        super(message);
-    }
-
-    public NetworkException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    public NetworkException(String message) { super(message); }
+    public NetworkException(String message, Throwable cause) { super(message, cause); }
 }

@@ -1,11 +1,7 @@
 package io.mysticcraft.exceptions;
 
-/**
- * Thrown when the server returns a 401 Unauthorized or 403 Forbidden response.
- */
+/** @deprecated Use {@link io.vestige.exceptions.AuthenticationException} */
+@Deprecated
 public class AuthenticationException extends ClientException {
-
-    public AuthenticationException(String message, int statusCode) {
-        super(message, statusCode, "authentication_error");
-    }
+    public AuthenticationException(String message) { super(message); }
 }

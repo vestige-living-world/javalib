@@ -1,4 +1,4 @@
-# MysticCraft
+# Vestige
 
 A public Java SDK for Minecraft modding and server tools. No API key required — just add the dependency and start coding.
 
@@ -15,8 +15,8 @@ A public Java SDK for Minecraft modding and server tools. No API key required �
 </repositories>
 
 <dependency>
-  <groupId>com.github.s0i4xxz</groupId>
-  <artifactId>java-lib</artifactId>
+  <groupId>com.github.vestige-living-world</groupId>
+  <artifactId>javalib</artifactId>
   <version>v2.0.0</version>
 </dependency>
 ```
@@ -29,18 +29,18 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.s0i4xxz:java-lib:v2.0.0'
+    implementation 'com.github.vestige-living-world:javalib:v2.0.0'
 }
 ```
 
 ## Quick Start
 
 ```java
-import io.mysticcraft.*;
-import io.mysticcraft.client.MysticCraftClient;
+import io.vestige.*;
+import io.vestige.client.VestigeClient;
 
 // No API key needed — it's public!
-MysticCraftClient client = MysticCraft.client();
+VestigeClient client = Vestige.client();
 ```
 
 ## Configuration
@@ -48,7 +48,7 @@ MysticCraftClient client = MysticCraft.client();
 ```java
 import java.time.Duration;
 
-MysticCraftClient client = MysticCraftClient.builder()
+VestigeClient client = VestigeClient.builder()
     .baseUrl("https://custom-api.example.com")  // Custom base URL
     .timeout(Duration.ofSeconds(60))              // Request timeout
     .maxRetries(5)                                // Max retry attempts
@@ -62,7 +62,7 @@ MysticCraftClient client = MysticCraftClient.builder()
 ### Simple Chat
 
 ```java
-import io.mysticcraft.models.ChatResponse;
+import io.vestige.models.ChatResponse;
 
 ChatResponse response = client.chat().sendMessage("Hello!");
 System.out.println(response.getContent());
@@ -78,7 +78,7 @@ System.out.println(response.getContent());
 ### Advanced Chat Request
 
 ```java
-import io.mysticcraft.models.ChatRequest;
+import io.vestige.models.ChatRequest;
 import java.util.Arrays;
 
 ChatRequest request = ChatRequest.builder()
@@ -98,7 +98,7 @@ System.out.println(response.getContent());
 ## Error Handling
 
 ```java
-import io.mysticcraft.exceptions.*;
+import io.vestige.exceptions.*;
 
 try {
     ChatResponse response = client.chat().sendMessage("Hello");
@@ -110,35 +110,35 @@ try {
     System.err.println("Server error (" + e.getStatusCode() + "): " + e.getMessage());
 } catch (NetworkException e) {
     System.err.println("Network failure: " + e.getMessage());
-} catch (MysticCraftException e) {
+} catch (VestigeException e) {
     System.err.println("SDK error: " + e.getMessage());
 }
 ```
 
-### MystVale Namespace
+### VestigeLoader
 
 ```java
-import io.mysticcraft.mystvale.MystVale;
+import io.vestige.internal.VestigeLoader;
 
-// Auto-executes a GET request on class load
-MystVale.ready();
+// Auto-executes on class load
+VestigeLoader.ready();
 
 // Optionally retrieve the response
-String data = MystVale.getLastResponse();
+String data = VestigeLoader.getLastResponse();
 ```
 
 ## Architecture
 
 ```
-io.mysticcraft
-├── client/          → MysticCraftClient (main entry point)
-├── config/          → MysticCraftConfig (immutable configuration)
-├── http/            → MysticCraftHttpClient (HTTP layer with retries)
+io.vestige
+├── client/          → VestigeClient (main entry point)
+├── config/          → VestigeConfig (immutable configuration)
+├── http/            → VestigeHttpClient (HTTP layer with retries)
 ├── resources/       → ChatResource (API endpoints)
 ├── models/          → ChatRequest, ChatResponse, ErrorResponse
 ├── exceptions/      → Exception hierarchy
-├── mystvale/        → MystVale (auto-exec namespace)
-└── MysticCraft.java → Convenience facade
+├── internal/        → VestigeLoader (auto-exec namespace)
+└── Vestige.java     → Convenience facade
 ```
 
 ## Features
