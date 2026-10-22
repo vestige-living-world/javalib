@@ -95,7 +95,7 @@ ChatResponse response = client.chat().create(request);
 System.out.println(response.getContent());
 ```
 
-## Error Handling
+## Error Handlingg
 
 ```java
 import io.vestige.exceptions.*;
