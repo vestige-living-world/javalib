@@ -1,4 +1,4 @@
-name: Java CI
+name: Build & Deploy
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,5 +21,72 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Build with Maven
+      - name: Build
         run: mvn clean package -B
+
+      - name: Deploy to Cloudflare R2
+        if: github.ref == 'refs/heads/main' || github.event_name == 'release'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          GROUP_PATH=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout | tr '.' '/')
+          ARTIFACT_ID=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+          REPO_BASE="releases/${GROUP_PATH}/${ARTIFACT_ID}"
+          REPO_VERSION="${REPO_BASE}/${VERSION}"
+
+          S3="aws s3 cp --endpoint-url ${R2_ENDPOINT}"
+
+          # ── upload versioned artifacts ──────────────────────────────────────
+          $S3 target/${ARTIFACT_ID}-${VERSION}.jar \
+              s3://${R2_BUCKET}/${REPO_VERSION}/${ARTIFACT_ID}-${VERSION}.jar
+
+          if [ -f target/${ARTIFACT_ID}-${VERSION}-sources.jar ]; then
+            $S3 target/${ARTIFACT_ID}-${VERSION}-sources.jar \
+                s3://${R2_BUCKET}/${REPO_VERSION}/${ARTIFACT_ID}-${VERSION}-sources.jar
+          fi
+
+          $S3 pom.xml \
+              s3://${R2_BUCKET}/${REPO_VERSION}/${ARTIFACT_ID}-${VERSION}.pom
+
+          # ── checksums ───────────────────────────────────────────────────────
+          for file in \
+              "target/${ARTIFACT_ID}-${VERSION}.jar:${ARTIFACT_ID}-${VERSION}.jar" \
+              "pom.xml:${ARTIFACT_ID}-${VERSION}.pom"; do
+            src="${file%%:*}"
+            name="${file##*:}"
+            md5sum  "$src" | awk '{print $1}' > /tmp/${name}.md5
+            sha1sum "$src" | awk '{print $1}' > /tmp/${name}.sha1
+            $S3 /tmp/${name}.md5  s3://${R2_BUCKET}/${REPO_VERSION}/${name}.md5
+            $S3 /tmp/${name}.sha1 s3://${R2_BUCKET}/${REPO_VERSION}/${name}.sha1
+          done
+
+          # ── maven-metadata.xml ──────────────────────────────────────────────
+          LAST_UPDATED=$(date -u +%Y%m%d%H%M%S)
+          cat > /tmp/maven-metadata.xml << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <metadata>
+            <groupId>$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)</groupId>
+            <artifactId>${ARTIFACT_ID}</artifactId>
+            <versioning>
+              <release>${VERSION}</release>
+              <versions>
+                <version>${VERSION}</version>
+              </versions>
+              <lastUpdated>${LAST_UPDATED}</lastUpdated>
+            </versioning>
+          </metadata>
+          EOF
+
+          $S3 /tmp/maven-metadata.xml \
+              s3://${R2_BUCKET}/${REPO_BASE}/maven-metadata.xml
+
+          md5sum  /tmp/maven-metadata.xml | awk '{print $1}' > /tmp/maven-metadata.xml.md5
+          sha1sum /tmp/maven-metadata.xml | awk '{print $1}' > /tmp/maven-metadata.xml.sha1
+          $S3 /tmp/maven-metadata.xml.md5  s3://${R2_BUCKET}/${REPO_BASE}/maven-metadata.xml.md5
+          $S3 /tmp/maven-metadata.xml.sha1 s3://${R2_BUCKET}/${REPO_BASE}/maven-metadata.xml.sha1
+
+          echo "Deployed ${ARTIFACT_ID}-${VERSION} to R2 at ${REPO_VERSION}"

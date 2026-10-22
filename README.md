@@ -9,15 +9,15 @@ A public Java SDK for Minecraft modding and server tools. No API key required â€
 ```xml
 <repositories>
   <repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
+    <id>vestige-releases</id>
+    <url>https://maven.vestigemc.com/releases</url>
   </repository>
 </repositories>
 
 <dependency>
-  <groupId>com.github.vestige-living-world</groupId>
+  <groupId>io.vestige</groupId>
   <artifactId>javalib</artifactId>
-  <version>v2.0.0</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -25,11 +25,11 @@ A public Java SDK for Minecraft modding and server tools. No API key required â€
 
 ```gradle
 repositories {
-    maven { url 'https://jitpack.io' }
+    maven { url 'https://maven.vestigemc.com/releases' }
 }
 
 dependencies {
-    implementation 'com.github.vestige-living-world:javalib:v2.0.0'
+    implementation 'io.vestige:javalib:2.0.0'
 }
 ```
 
