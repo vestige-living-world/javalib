@@ -25,12 +25,7 @@ jobs:
         run: mvn clean package -B
 
       - name: Deploy to Cloudflare R2
-        if: >
-          (github.ref == 'refs/heads/main' || github.event_name == 'release') &&
-          secrets.R2_ACCOUNT_ID != '' &&
-          secrets.R2_ACCESS_KEY_ID != '' &&
-          secrets.R2_SECRET_ACCESS_KEY != '' &&
-          secrets.R2_BUCKET != ''
+        if: github.ref == 'refs/heads/main' || github.event_name == 'release'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
